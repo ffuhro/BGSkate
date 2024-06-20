@@ -33,6 +33,9 @@ public:
 	UPROPERTY(VisibleAnywhere)
 	UCameraComponent* CameraComponent;
 
+	UPROPERTY(VisibleAnywhere)
+	USkeletalMeshComponent* CharacterMesh;
+
 // ================================ INPUTS =============================================================================
 protected:
 

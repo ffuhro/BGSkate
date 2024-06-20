@@ -13,6 +13,9 @@ ASkateWheeledVehiclePawn::ASkateWheeledVehiclePawn()
 {
 	GetMesh()->SetSimulatePhysics(true);
 
+	CharacterMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("CharacterMesh"));
+	CharacterMesh->SetupAttachment(GetRootComponent());
+	
 	SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
 	SpringArm->SetupAttachment(GetRootComponent());
 	SpringArm->bInheritYaw = false;
@@ -69,7 +72,7 @@ void ASkateWheeledVehiclePawn::Move(const FInputActionValue& Value)
 		}
 		else
 		{
-			DriveCharge += .3 * CurrentValue;
+			DriveCharge += .6 * CurrentValue;
 		}
 	}
 	
