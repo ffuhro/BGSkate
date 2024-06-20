@@ -17,13 +17,25 @@ ATestPawn01::ATestPawn01()
 	SphereComponent = CreateDefaultSubobject<USphereComponent>(TEXT("CollisionBase"));
 	SphereComponent->SetSimulatePhysics(true);
 	SphereComponent->SetCollisionProfileName("Pawn");
+	SphereComponent->SetAngularDamping(0.001f);
+	SphereComponent->SetLinearDamping(0.001f);
 	SetRootComponent(SphereComponent);
 
 	SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
 	SpringArm->SetupAttachment(GetRootComponent());
+	SpringArm->bInheritYaw = false;
+	SpringArm->bInheritPitch = false;
+	SpringArm->bInheritRoll = false;
+	SpringArm->SocketOffset.Z = 30.f;
 
 	CameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	CameraComponent->SetupAttachment(SpringArm);
+
+	StaticMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMesh"));
+	StaticMesh->SetupAttachment(GetRootComponent());
+	StaticMesh->SetUsingAbsoluteRotation(true);
+	StaticMesh->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
+	
 	
 }
 
@@ -61,10 +73,14 @@ void ATestPawn01::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 
 void ATestPawn01::Move(const FInputActionValue& Value)
 {
-	const bool CurrentValue = Value.Get<bool>();
-	if (CurrentValue)
+	const FVector2d CurrentValue = Value.Get<FVector2D>();
+	if (Controller != nullptr)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("It's Alive"));
+		FVector Rotation = StaticMesh->GetForwardVector();
+		Rotation.Z = 0.f;
+		const FVector ForwardDirection = Rotation.GetSafeNormal();
+		// SphereComponent->AddForce(ForwardDirection*5000*CurrentValue.X);
+		SphereComponent->AddTorqueInDegrees(FVector(0,1000000,0));
 	}
 }
 

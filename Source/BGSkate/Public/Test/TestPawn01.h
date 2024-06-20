@@ -40,6 +40,9 @@ public:
 	UPROPERTY(VisibleAnywhere)
 	UCameraComponent* CameraComponent;
 
+	UPROPERTY(VisibleAnywhere)
+	UStaticMeshComponent* StaticMesh;
+
 
 // ================================ INPUTS =============================================================================
 protected:
