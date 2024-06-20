@@ -6,24 +6,56 @@
 #include "GameFramework/Pawn.h"
 #include "TestPawn01.generated.h"
 
+struct FInputActionValue;
+class UInputAction;
+class UCameraComponent;
+class USpringArmComponent;
+class USphereComponent;
+class UInputMappingContext;
+
 UCLASS()
 class BGSKATE_API ATestPawn01 : public APawn
 {
 	GENERATED_BODY()
 
 public:
-	// Sets default values for this pawn's properties
 	ATestPawn01();
 
 protected:
-	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
 public:	
-	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+// ================================ COMPONENTS =========================================================================
+
+	UPROPERTY(VisibleAnywhere)
+	USphereComponent* SphereComponent;
+
+	UPROPERTY(VisibleAnywhere)
+	USpringArmComponent* SpringArm;
+
+	UPROPERTY(VisibleAnywhere)
+	UCameraComponent* CameraComponent;
+
+
+// ================================ INPUTS =============================================================================
+protected:
+
+	// Enhanced Input
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input)
+	UInputMappingContext* DefaultMappingContext;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input)
+	UInputAction* MoveAction;
+
+	// Events
+
+	void Move(const FInputActionValue& Value);
+
+	void Look(const FInputActionValue& Value);
+	
 };
