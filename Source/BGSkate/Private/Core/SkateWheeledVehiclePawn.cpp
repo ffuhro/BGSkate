@@ -44,7 +44,18 @@ void ASkateWheeledVehiclePawn::BeginPlay()
 void ASkateWheeledVehiclePawn::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
-	// GetVehicleMovementComponent()->AddInputVector(FVector(0.f, 1.f, 0.f));
+
+	if (DriveCharge - DeltaSeconds > 0.f)
+	{
+		DriveCharge -= DeltaSeconds * 0.5;
+	}
+	else
+	{
+		DriveCharge = 0.01f;
+	}
+
+	GetVehicleMovementComponent()->SetThrottleInput(DriveCharge);
+	UE_LOG(LogTemp, Display, TEXT("%f"), DriveCharge)
 }
 
 void ASkateWheeledVehiclePawn::Move(const FInputActionValue& Value)
@@ -52,7 +63,14 @@ void ASkateWheeledVehiclePawn::Move(const FInputActionValue& Value)
 	const float CurrentValue = Value.Get<float>();
 	if (Controller != nullptr)
 	{
-		GetVehicleMovementComponent()->SetThrottleInput(CurrentValue);
+		if (DriveCharge + .3f > 1)
+		{
+			DriveCharge = 1.f;
+		}
+		else
+		{
+			DriveCharge += .3 * CurrentValue;
+		}
 	}
 	
 }

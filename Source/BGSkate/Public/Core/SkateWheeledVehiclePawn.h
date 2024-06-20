@@ -45,6 +45,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input)
 	UInputAction* SteeringAction;
 
+
+	float DriveCharge;
+	
 	// Functions
 
 	void Move(const FInputActionValue& Value);
