@@ -14,6 +14,7 @@ ASkateWheeledVehiclePawn::ASkateWheeledVehiclePawn()
 	GetMesh()->SetSimulatePhysics(true);
 
 	CharacterMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("CharacterMesh"));
+	CharacterMesh->SetCollisionProfileName(FName("CharacterMesh"));
 	CharacterMesh->SetupAttachment(GetRootComponent());
 	
 	SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
@@ -63,6 +64,8 @@ void ASkateWheeledVehiclePawn::Tick(float DeltaSeconds)
 	// UE_LOG(LogTemp, Display, TEXT("%f"), DriveCharge)
 }
 
+// -====================== Base movement ============================-
+
 void ASkateWheeledVehiclePawn::Move()
 {
 	if (Controller != nullptr)
@@ -92,6 +95,8 @@ void ASkateWheeledVehiclePawn::Braking(const FInputActionValue& Value)
 
 	}
 }
+
+// -=========================== Push ==================================-
 
 void ASkateWheeledVehiclePawn::PushEnd()
 {
@@ -130,6 +135,36 @@ void ASkateWheeledVehiclePawn::PlayPushMontage()
 	
 }
 
+// -============================= Jump Area ==================================-
+
+void ASkateWheeledVehiclePawn::PlayJumpMontage()
+{
+	if (!JumpMontage) { return; }
+
+	if (bCanJump)
+	{
+		bCanJump = false;
+		CharacterAnimInstance->Montage_Play(JumpMontage);
+		UE_LOG(LogTemp, Display, TEXT("Jump  anim montage started"));
+
+	}
+
+	
+}
+
+void ASkateWheeledVehiclePawn::Jump()
+{
+	GetMesh()->SetAllPhysicsLinearVelocity(FVector(0.f, 0.f, 500), true);
+	UE_LOG(LogTemp, Display, TEXT("Impulse added"));
+	GetWorldTimerManager().SetTimer(JumpEndHandle, this, &ASkateWheeledVehiclePawn::JumpStop, 3.f);
+
+}
+
+void ASkateWheeledVehiclePawn::JumpStop()
+{
+	bCanJump = true;
+}
+
 void ASkateWheeledVehiclePawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
@@ -140,5 +175,6 @@ void ASkateWheeledVehiclePawn::SetupPlayerInputComponent(UInputComponent* Player
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ASkateWheeledVehiclePawn::PlayPushMontage);
 		EnhancedInputComponent->BindAction(BrakeAction, ETriggerEvent::Triggered, this, &ASkateWheeledVehiclePawn::Braking);
 		EnhancedInputComponent->BindAction(SteeringAction, ETriggerEvent::Triggered, this, &ASkateWheeledVehiclePawn::Steering);
+		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &ASkateWheeledVehiclePawn::PlayJumpMontage);
 	}
 }

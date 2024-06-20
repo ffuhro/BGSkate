@@ -6,6 +6,7 @@
 #include "WheeledVehiclePawn.h"
 #include "SkateWheeledVehiclePawn.generated.h"
 
+class UPhysicalAnimationComponent;
 struct FInputActionValue;
 class UInputAction;
 class UInputMappingContext;
@@ -30,41 +31,43 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, Category=Animation)
 	UAnimInstance* CharacterAnimInstance;
-	
 	UPROPERTY(EditDefaultsOnly, Category=Animation)
 	UAnimMontage* PushMontage;
+	UPROPERTY(EditDefaultsOnly, Category=Animation)
+	UAnimMontage* JumpMontage;
 
 	UPROPERTY(BlueprintReadWrite, Category=Animation)
 	bool bCanPush = true;
+	UPROPERTY(BlueprintReadWrite, Category=Animation)
+	bool bCanJump = true;
 	
-	// ================================ COMPONENTS =====================================================================
+	float DriveCharge;
 
 	UPROPERTY(VisibleAnywhere, Category=Camera)
 	USpringArmComponent* SpringArm;
-
 	UPROPERTY(VisibleAnywhere, Category=Camera)
 	UCameraComponent* CameraComponent;
-
 	UPROPERTY(VisibleAnywhere, Category=Core)
 	USkeletalMeshComponent* CharacterMesh;
 
+	FTimerHandle JumpEndHandle;
+	
 	// ================================ INPUTS =========================================================================
 
 	// Enhanced Input Variables
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=ActionInput)
 	UInputMappingContext* DefaultMappingContext;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=ActionInput)
 	UInputAction* MoveAction;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=ActionInput)
 	UInputAction* BrakeAction;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=ActionInput)
 	UInputAction* SteeringAction;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=ActionInput)
+	UInputAction* JumpAction;
 
-
-	float DriveCharge;
-	
-	// ================================ INPUTS =========================================================================
+	// ================================ FUNCTIONS ======================================================================
 	
 	UFUNCTION(BlueprintCallable)
 	void Move();
@@ -77,6 +80,14 @@ protected:
 	void Steering(const FInputActionValue& Value);
 
 	void PlayPushMontage();
+
+	void PlayJumpMontage();
+
+	UFUNCTION(BlueprintCallable)
+	void Jump();
+
+	UFUNCTION(BlueprintCallable)
+	void JumpStop();
 	
 	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
 };
