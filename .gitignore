@@ -69,6 +69,10 @@ Saved/*
 # Compiled source files for the engine to use
 Intermediate/*
 Plugins/*/Intermediate/*
-
+Plugins/Developer/RiderLink
 # Cache files for the editor to use
 DerivedDataCache/*
+.vsconfig
+.idea/*
+
+*DotSettings.user
