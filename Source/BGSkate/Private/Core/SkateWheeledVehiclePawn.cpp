@@ -33,6 +33,8 @@ ASkateWheeledVehiclePawn::ASkateWheeledVehiclePawn()
 void ASkateWheeledVehiclePawn::BeginPlay()
 {
 	Super::BeginPlay();
+
+	CharacterAnimInstance = CharacterMesh->GetAnimInstance();
 	
 	// Setup Inputs
 	if (APlayerController* PlayerController = Cast<APlayerController>(GetController()))
@@ -50,7 +52,7 @@ void ASkateWheeledVehiclePawn::Tick(float DeltaSeconds)
 
 	if (DriveCharge - DeltaSeconds > 0.f)
 	{
-		DriveCharge -= DeltaSeconds * 0.5;
+		DriveCharge -= DeltaSeconds * 0.3;
 	}
 	else
 	{
@@ -58,12 +60,11 @@ void ASkateWheeledVehiclePawn::Tick(float DeltaSeconds)
 	}
 
 	GetVehicleMovementComponent()->SetThrottleInput(DriveCharge);
-	UE_LOG(LogTemp, Display, TEXT("%f"), DriveCharge)
+	// UE_LOG(LogTemp, Display, TEXT("%f"), DriveCharge)
 }
 
-void ASkateWheeledVehiclePawn::Move(const FInputActionValue& Value)
+void ASkateWheeledVehiclePawn::Move()
 {
-	const float CurrentValue = Value.Get<float>();
 	if (Controller != nullptr)
 	{
 		if (DriveCharge + .3f > 1)
@@ -72,17 +73,46 @@ void ASkateWheeledVehiclePawn::Move(const FInputActionValue& Value)
 		}
 		else
 		{
-			DriveCharge += .6 * CurrentValue;
+			DriveCharge += 1.f; // charge strenght
 		}
 	}
 	
 }
+
+void ASkateWheeledVehiclePawn::PushEnd()
+{
+	bCanPush = true;
+}
+
 void ASkateWheeledVehiclePawn::Steering(const FInputActionValue& Value)
 {
 	const float CurrentValue = Value.Get<float>();
 	if (Controller != nullptr)
 	{
 		GetVehicleMovementComponent()->SetSteeringInput(CurrentValue);
+	}
+	
+}
+
+void ASkateWheeledVehiclePawn::PlayPushMontage()
+{
+	if (!PushMontage) { return; }
+
+	if (bCanPush && CharacterAnimInstance->Montage_IsPlaying(PushMontage))
+	{
+		bCanPush = false;
+		CharacterAnimInstance->Montage_Play(PushMontage);
+		CharacterAnimInstance->Montage_JumpToSection(FName("2"));
+		UE_LOG(LogTemp, Display, TEXT("Quick Push anim montage started"));
+	}
+
+
+	if (CharacterAnimInstance && !CharacterAnimInstance->Montage_IsPlaying(PushMontage))
+	{
+		bCanPush = false;
+		CharacterAnimInstance->Montage_Play(PushMontage);
+		CharacterAnimInstance->Montage_JumpToSection(FName("1"));
+		UE_LOG(LogTemp, Display, TEXT("Push anim montage started"));
 	}
 	
 }
@@ -94,7 +124,7 @@ void ASkateWheeledVehiclePawn::SetupPlayerInputComponent(UInputComponent* Player
 	{
 		UE_LOG(LogTemp, Warning, TEXT("EnhancedInputComponent Success"));
 
-		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ASkateWheeledVehiclePawn::Move);
+		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ASkateWheeledVehiclePawn::PlayPushMontage);
 		EnhancedInputComponent->BindAction(SteeringAction, ETriggerEvent::Triggered, this, &ASkateWheeledVehiclePawn::Steering);
 	}
 }

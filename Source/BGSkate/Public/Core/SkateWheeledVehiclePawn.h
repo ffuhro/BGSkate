@@ -23,21 +23,34 @@ class BGSKATE_API ASkateWheeledVehiclePawn : public AWheeledVehiclePawn
 public:
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaSeconds) override;
-
+	
 protected:
+
+	// ================================ VARIABLES ======================================================================
+
+	UPROPERTY(VisibleAnywhere, Category=Animation)
+	UAnimInstance* CharacterAnimInstance;
+	
+	UPROPERTY(EditDefaultsOnly, Category=Animation)
+	UAnimMontage* PushMontage;
+	UPROPERTY(EditDefaultsOnly, Category=Animation)
+	UAnimMontage* PushQuickMontage;
+
+	UPROPERTY(BlueprintReadWrite, Category=Animation)
+	bool bCanPush = true;
 	
 	// ================================ COMPONENTS =====================================================================
 
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(VisibleAnywhere, Category=Camera)
 	USpringArmComponent* SpringArm;
 
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(VisibleAnywhere, Category=Camera)
 	UCameraComponent* CameraComponent;
 
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(VisibleAnywhere, Category=Core)
 	USkeletalMeshComponent* CharacterMesh;
 
-	// ================================ INPUTS =============================================================================
+	// ================================ INPUTS =========================================================================
 
 	// Enhanced Input Variables
 	
@@ -51,12 +64,17 @@ protected:
 
 	float DriveCharge;
 	
-	// Functions
+	// ================================ INPUTS =========================================================================
+	
+	UFUNCTION(BlueprintCallable)
+	void Move();
 
-	void Move(const FInputActionValue& Value);
+	UFUNCTION(BlueprintCallable)
+	void PushEnd();	
+	
 	void Steering(const FInputActionValue& Value);
 
-	
+	void PlayPushMontage();
 	
 	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
 };
