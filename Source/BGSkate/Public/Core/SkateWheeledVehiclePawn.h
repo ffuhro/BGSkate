@@ -24,8 +24,9 @@ public:
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaSeconds) override;
 
-
-// ================================ COMPONENTS =====================================================================
+protected:
+	
+	// ================================ COMPONENTS =====================================================================
 
 	UPROPERTY(VisibleAnywhere)
 	USpringArmComponent* SpringArm;
@@ -36,8 +37,7 @@ public:
 	UPROPERTY(VisibleAnywhere)
 	USkeletalMeshComponent* CharacterMesh;
 
-// ================================ INPUTS =============================================================================
-protected:
+	// ================================ INPUTS =============================================================================
 
 	// Enhanced Input Variables
 	
