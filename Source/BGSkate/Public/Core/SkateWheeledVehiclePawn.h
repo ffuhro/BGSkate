@@ -33,8 +33,6 @@ protected:
 	
 	UPROPERTY(EditDefaultsOnly, Category=Animation)
 	UAnimMontage* PushMontage;
-	UPROPERTY(EditDefaultsOnly, Category=Animation)
-	UAnimMontage* PushQuickMontage;
 
 	UPROPERTY(BlueprintReadWrite, Category=Animation)
 	bool bCanPush = true;
@@ -59,6 +57,8 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input)
 	UInputAction* MoveAction;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input)
+	UInputAction* BrakeAction;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input)
 	UInputAction* SteeringAction;
 
 
@@ -69,6 +69,8 @@ protected:
 	UFUNCTION(BlueprintCallable)
 	void Move();
 
+	void Braking(const FInputActionValue& Value);
+	
 	UFUNCTION(BlueprintCallable)
 	void PushEnd();	
 	

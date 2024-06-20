@@ -73,10 +73,24 @@ void ASkateWheeledVehiclePawn::Move()
 		}
 		else
 		{
-			DriveCharge += 1.f; // charge strenght
+			DriveCharge += .6f; // charge strength
 		}
 	}
 	
+}
+
+void ASkateWheeledVehiclePawn::Braking(const FInputActionValue& Value)
+{
+	const float CurrentValue = Value.Get<float>();
+
+	if (CurrentValue < -0.5)
+	{
+		DriveCharge = 0;
+		GetVehicleMovementComponent()->SetThrottleInput(CurrentValue);
+	
+		UE_LOG(LogTemp, Display, TEXT("%f"), CurrentValue)
+
+	}
 }
 
 void ASkateWheeledVehiclePawn::PushEnd()
@@ -91,7 +105,6 @@ void ASkateWheeledVehiclePawn::Steering(const FInputActionValue& Value)
 	{
 		GetVehicleMovementComponent()->SetSteeringInput(CurrentValue);
 	}
-	
 }
 
 void ASkateWheeledVehiclePawn::PlayPushMontage()
@@ -125,6 +138,7 @@ void ASkateWheeledVehiclePawn::SetupPlayerInputComponent(UInputComponent* Player
 		UE_LOG(LogTemp, Warning, TEXT("EnhancedInputComponent Success"));
 
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ASkateWheeledVehiclePawn::PlayPushMontage);
+		EnhancedInputComponent->BindAction(BrakeAction, ETriggerEvent::Triggered, this, &ASkateWheeledVehiclePawn::Braking);
 		EnhancedInputComponent->BindAction(SteeringAction, ETriggerEvent::Triggered, this, &ASkateWheeledVehiclePawn::Steering);
 	}
 }
