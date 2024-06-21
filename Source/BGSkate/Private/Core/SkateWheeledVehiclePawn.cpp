@@ -40,6 +40,8 @@ void ASkateWheeledVehiclePawn::BeginPlay()
 	Super::BeginPlay();
 
 	CharacterAnimInstance = CharacterMesh->GetAnimInstance();
+
+	CameraManager = UGameplayStatics::GetPlayerCameraManager(this, 0);
 	
 	// Setup Inputs
 	if (APlayerController* PlayerController = Cast<APlayerController>(GetController()))
@@ -67,6 +69,7 @@ void ASkateWheeledVehiclePawn::Tick(float DeltaSeconds)
 	GetVehicleMovementComponent()->SetThrottleInput(DriveCharge);
 	// UE_LOG(LogTemp, Display, TEXT("%f"), DriveCharge)
 	UpdateFallingState(DeltaSeconds);
+	UpdateAirborneBehavior(DeltaSeconds);
 }
 
 // -====================== Base movement ============================-
@@ -193,7 +196,13 @@ void ASkateWheeledVehiclePawn::CameraControl(const FInputActionValue& Value)
 
 void ASkateWheeledVehiclePawn::AirControl(const FInputActionValue& Value)
 {
-	
+	if (!MovementStatus == EMS_Falling) return;
+	FVector2d CurrentValue = Value.Get<FVector2d>();
+
+
+	GetMesh()->AddTorqueInDegrees(GetMesh()->GetUpVector() * 500.f * CurrentValue.X, NAME_None, true);
+	UE_LOG(LogTemp, Warning, TEXT("Y: %f"), CurrentValue.X);
+
 }
 
 // -================================= FALLING STATE ============================------------
@@ -210,23 +219,58 @@ void ASkateWheeledVehiclePawn::UpdateFallingState(const float DeltaSeconds)
 	if (!HitResult.bBlockingHit && MovementStatus == EMS_Riding)
 	{
 		MovementStatus = EMS_Falling;
-		GetVehicleMovementComponent()->CenterOfMassOverride = FVector(0.f, 0.f, 30.f);
 		bCanJump = false;
+
+		GetMesh()->SetAngularDamping(2.f);
+		
+		
+		GetVehicleMovementComponent()->CenterOfMassOverride = FVector(0.f, 0.f, 50.f);
+
+		GetVehicleMovementComponent()->TorqueControl.Enabled = false;
+		GetVehicleMovementComponent()->TargetRotationControl.Enabled = false;
+		GetVehicleMovementComponent()->StabilizeControl.Enabled = false;
+
+		DriveCharge = 0.f;
+		
 		UE_LOG(LogTemp, Warning, TEXT("Player Is Falling"));
 	}
 	else if (HitResult.bBlockingHit && MovementStatus == EMS_Falling)
 	{
 		MovementStatus = EMS_Riding;
 		bCanJump = true;
+
+		GetMesh()->SetAngularDamping(.01f);		
+		
 		GetVehicleMovementComponent()->CenterOfMassOverride = FVector(0.f, 0.f, -5.f);
+
+		GetVehicleMovementComponent()->TorqueControl.Enabled = false;
+		GetVehicleMovementComponent()->TargetRotationControl.Enabled = false;
+		GetVehicleMovementComponent()->StabilizeControl.Enabled = false;
+		
+
 		UE_LOG(LogTemp, Warning, TEXT("Player is Riding"));
 	}
+
+
 	// UE_LOG(LogTemp, Warning, TEXT("Center Of Mass is: %s"), *GetVehicleMovementComponent()->CenterOfMassOverride.ToString());
 }
 
 void ASkateWheeledVehiclePawn::UpdateAirborneBehavior(const float DeltaSeconds)
 {
+
 	if (!MovementStatus == EMS_Falling) return;
 
+	TArray<AActor*> ActorsToIgnore;
+	ActorsToIgnore.Add(this);
 	
+	FHitResult HitResultSlope;
+	UKismetSystemLibrary::LineTraceSingleByProfile(this, GetActorLocation(), GetActorLocation() + FVector(0.f, 0.f, - 200.f) ,FName("IgnoreOnlyPawn"), false, ActorsToIgnore, EDrawDebugTrace::ForOneFrame, HitResultSlope, true);
+
+	if (HitResultSlope.bBlockingHit)
+	{
+		const FRotator RotationTarget = FRotator(HitResultSlope.Normal.ForwardVector.Rotation().Pitch, GetActorRotation().Yaw, HitResultSlope.Normal.ForwardVector.Rotation().Roll);
+		SetActorRotation(FMath::RInterpTo(GetActorRotation(), RotationTarget, DeltaSeconds, 1), ETeleportType::TeleportPhysics);
+		UE_LOG(LogTemp, Warning, TEXT("Interping rotation to surface"));
+	}
+	// GetMesh()->AddTorqueInDegrees(CameraManager->GetActorUpVector() * 3000000.f);
 }

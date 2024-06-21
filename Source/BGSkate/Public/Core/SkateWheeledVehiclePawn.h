@@ -61,6 +61,9 @@ protected:
 	USkeletalMeshComponent* CharacterMesh;
 
 	FTimerHandle JumpEndHandle;
+
+	UPROPERTY(VisibleAnywhere, Category="Core|Camera")
+	APlayerCameraManager* CameraManager;
 	
 	// ================================ INPUTS =========================================================================
 
