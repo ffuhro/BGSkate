@@ -8,22 +8,26 @@
 #include "EnhancedInputSubsystems.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "Kismet/GameplayStatics.h"
 
 ASkateWheeledVehiclePawn::ASkateWheeledVehiclePawn()
 {
 	GetMesh()->SetSimulatePhysics(true);
-
+	
 	CharacterMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("CharacterMesh"));
 	CharacterMesh->SetCollisionProfileName(FName("CharacterMesh"));
 	CharacterMesh->SetupAttachment(GetRootComponent());
 	
 	SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
 	SpringArm->SetupAttachment(GetRootComponent());
-	SpringArm->bInheritYaw = false;
-	SpringArm->bInheritPitch = false;
-	SpringArm->bInheritRoll = false;
+
+	bUseControllerRotationPitch = false;
+	bUseControllerRotationYaw = false;
+	bUseControllerRotationRoll = false;
+	
 	SpringArm->SocketOffset.Z = 30.f;
 	SpringArm->TargetArmLength = 200.f;
+	SpringArm->bUsePawnControlRotation = true;
 
 	CameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	CameraComponent->SetupAttachment(SpringArm);
@@ -62,6 +66,7 @@ void ASkateWheeledVehiclePawn::Tick(float DeltaSeconds)
 
 	GetVehicleMovementComponent()->SetThrottleInput(DriveCharge);
 	// UE_LOG(LogTemp, Display, TEXT("%f"), DriveCharge)
+	UpdateFallingState(DeltaSeconds);
 }
 
 // -====================== Base movement ============================-
@@ -91,7 +96,7 @@ void ASkateWheeledVehiclePawn::Braking(const FInputActionValue& Value)
 		DriveCharge = 0;
 		GetVehicleMovementComponent()->SetThrottleInput(CurrentValue);
 	
-		UE_LOG(LogTemp, Display, TEXT("%f"), CurrentValue)
+		// UE_LOG(LogTemp, Display, TEXT("%f"), CurrentValue)
 
 	}
 }
@@ -147,22 +152,15 @@ void ASkateWheeledVehiclePawn::PlayJumpMontage()
 		CharacterAnimInstance->Montage_Play(JumpMontage);
 		UE_LOG(LogTemp, Display, TEXT("Jump  anim montage started"));
 
-	}
-
-	
+	}	
 }
 
 void ASkateWheeledVehiclePawn::Jump()
 {
 	GetMesh()->SetAllPhysicsLinearVelocity(FVector(0.f, 0.f, 500), true);
 	UE_LOG(LogTemp, Display, TEXT("Impulse added"));
-	GetWorldTimerManager().SetTimer(JumpEndHandle, this, &ASkateWheeledVehiclePawn::JumpStop, 3.f);
+	// GetWorldTimerManager().SetTimer(JumpEndHandle, this, &ASkateWheeledVehiclePawn::JumpStop, 3.f);
 
-}
-
-void ASkateWheeledVehiclePawn::JumpStop()
-{
-	bCanJump = true;
 }
 
 void ASkateWheeledVehiclePawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -176,5 +174,59 @@ void ASkateWheeledVehiclePawn::SetupPlayerInputComponent(UInputComponent* Player
 		EnhancedInputComponent->BindAction(BrakeAction, ETriggerEvent::Triggered, this, &ASkateWheeledVehiclePawn::Braking);
 		EnhancedInputComponent->BindAction(SteeringAction, ETriggerEvent::Triggered, this, &ASkateWheeledVehiclePawn::Steering);
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &ASkateWheeledVehiclePawn::PlayJumpMontage);
+		EnhancedInputComponent->BindAction(AirControlAction, ETriggerEvent::Triggered, this, &ASkateWheeledVehiclePawn::AirControl);
+		EnhancedInputComponent->BindAction(CameraControlAction, ETriggerEvent::Triggered, this, &ASkateWheeledVehiclePawn::CameraControl);
 	}
+}
+
+void ASkateWheeledVehiclePawn::CameraControl(const FInputActionValue& Value)
+{
+	const FVector2d CurrentValue = Value.Get<FVector2d>();
+	//
+	AddControllerYawInput(CurrentValue.X);
+	AddControllerPitchInput(CurrentValue.Y);
+
+	UE_LOG(LogTemp, Warning, TEXT("X: %f"), CurrentValue.X);
+	UE_LOG(LogTemp, Warning, TEXT("Y: %f"), CurrentValue.Y);
+
+}
+
+void ASkateWheeledVehiclePawn::AirControl(const FInputActionValue& Value)
+{
+	
+}
+
+// -================================= FALLING STATE ============================------------
+
+void ASkateWheeledVehiclePawn::UpdateFallingState(const float DeltaSeconds)
+{
+	// Handle Falling
+
+	TArray<AActor*> ActorsToIgnore;
+	ActorsToIgnore.Add(this);
+	FHitResult HitResult;
+	UKismetSystemLibrary::BoxTraceSingleByProfile(this, GetActorLocation(), GetActorLocation() + GetActorUpVector() * - 10.f ,FVector(20.f, 7.f, 4.f), GetActorRotation(), FName("IgnoreOnlyPawn"), false, ActorsToIgnore, EDrawDebugTrace::ForOneFrame, HitResult, true);
+
+	if (!HitResult.bBlockingHit && MovementStatus == EMS_Riding)
+	{
+		MovementStatus = EMS_Falling;
+		GetVehicleMovementComponent()->CenterOfMassOverride = FVector(0.f, 0.f, 30.f);
+		bCanJump = false;
+		UE_LOG(LogTemp, Warning, TEXT("Player Is Falling"));
+	}
+	else if (HitResult.bBlockingHit && MovementStatus == EMS_Falling)
+	{
+		MovementStatus = EMS_Riding;
+		bCanJump = true;
+		GetVehicleMovementComponent()->CenterOfMassOverride = FVector(0.f, 0.f, -5.f);
+		UE_LOG(LogTemp, Warning, TEXT("Player is Riding"));
+	}
+	// UE_LOG(LogTemp, Warning, TEXT("Center Of Mass is: %s"), *GetVehicleMovementComponent()->CenterOfMassOverride.ToString());
+}
+
+void ASkateWheeledVehiclePawn::UpdateAirborneBehavior(const float DeltaSeconds)
+{
+	if (!MovementStatus == EMS_Falling) return;
+
+	
 }

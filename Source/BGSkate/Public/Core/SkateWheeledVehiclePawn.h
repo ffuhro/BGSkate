@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "InputActionValue.h"
 #include "WheeledVehiclePawn.h"
 #include "SkateWheeledVehiclePawn.generated.h"
 
@@ -15,6 +16,15 @@ class USpringArmComponent;
 /**
  * 
  */
+
+
+UENUM()
+enum EMovementStatus
+{
+	EMS_Riding,
+	EMS_Falling
+};
+
 UCLASS()
 class BGSKATE_API ASkateWheeledVehiclePawn : public AWheeledVehiclePawn
 {
@@ -66,7 +76,11 @@ protected:
 	UInputAction* SteeringAction;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=ActionInput)
 	UInputAction* JumpAction;
-
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=ActionInput)
+	UInputAction* AirControlAction;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=ActionInput)
+	UInputAction* CameraControlAction;
+	
 	// ================================ FUNCTIONS ======================================================================
 	
 	UFUNCTION(BlueprintCallable)
@@ -86,8 +100,15 @@ protected:
 	UFUNCTION(BlueprintCallable)
 	void Jump();
 
-	UFUNCTION(BlueprintCallable)
-	void JumpStop();
-	
 	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
+
+	void CameraControl(const FInputActionValue& Value);
+	
+	void AirControl(const FInputActionValue& Value);
+
+	// ================================ STATES UPDATES =================================================================
+
+	EMovementStatus MovementStatus = EMS_Falling;
+	void UpdateFallingState(const float DeltaSeconds);
+	void UpdateAirborneBehavior(const float DeltaSeconds);
 };
